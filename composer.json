@@ -1,0 +1,43 @@
+{
+    "name": "castor/router",
+    "description": "A composable Express-like router for PSR-7 based PHP applications",
+    "minimum-stability": "stable",
+    "license": "MIT",
+    "keywords": ["php", "container", "psr", "php7", "psr7", "router", "http", "middleware"],
+    "authors": [
+        {
+            "name": "Matias Navarro Carter",
+            "email": "mnavarrocarter@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "psr/container": "^1.0",
+        "mnavarrocarter/path-to-regexp-php": "^1.0",
+        "psr/http-server-middleware": "^1.0",
+        "psr/http-factory": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Castor\\Http\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Castor\\Http\\": "tests"
+        }
+    },
+    "scripts": {
+        "fix": "php-cs-fixer fix",
+        "lint": "php-cs-fixer fix --dry-run -v",
+        "test": "XDEBUG_MODE=coverage phpunit --testdox --coverage-text",
+        "types": "psalm --stats --no-cache --show-info=true"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-latest",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpunit/phpunit": "^9.5",
+        "vimeo/psalm": "^4.6",
+        "symfony/var-dumper": "^5.3"
+    }
+}
