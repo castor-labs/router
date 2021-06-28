@@ -49,35 +49,47 @@ class Path implements MiddlewareInterface
         $path = $this->extractPathFromRequest($request);
 
         try {
-            $request = $this->matchPath($request, $path);
+            $modifyRequest = $this->matchPath($request, $path);
         } catch (NoMatchException $e) {
             return $handler->handle($request);
         }
 
-        return $this->handler->handle($request);
+        return $this->handler->handle($modifyRequest($request));
     }
 
     protected function extractPathFromRequest(Request $request): string
     {
-        return $request->getAttribute(self::PATH_ATTR) ?? $request->getUri()->getPath();
+        $path = $request->getAttribute(self::PATH_ATTR) ?? $request->getUri()->getPath();
+        if ('' === $path) {
+            $path = '/';
+        }
+
+        return $path;
     }
 
     /**
      * @throws NoMatchException
+     *
+     * @return callable(Request): Request
      */
-    protected function matchPath(Request $request, string $path): Request
+    protected function matchPath(Request $request, string $path): callable
     {
         $result = $this->path->match($path);
 
-        // Modify the path to match and store it in the request.
-        $path = str_replace($result->getMatchedString(), '', $path);
-        $request->withAttribute(self::PATH_ATTR, $path);
+        return static function (Request $request) use ($result, $path): Request {
+            // Modify the path to match and store it in the request.
+            $path = str_replace($result->getMatchedString(), '', $path);
+            if ('' === $path) {
+                $path = '/';
+            }
+            $request = $request->withAttribute(self::PATH_ATTR, $path);
 
-        // Store the attributes in the request
-        foreach ($result->getValues() as $attr => $value) {
-            $request = $request->withAttribute($attr, $value);
-        }
+            // Store the attributes in the request
+            foreach ($result->getValues() as $attr => $value) {
+                $request = $request->withAttribute($attr, $value);
+            }
 
-        return $request;
+            return $request;
+        };
     }
 }

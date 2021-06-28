@@ -96,7 +96,6 @@ final class ArrayTreeRouteLoader implements RouteLoader
 
     /**
      * @param $handler
-     * @return RequestHandlerInterface
      */
     private function resolveHandler($handler): RequestHandlerInterface
     {
@@ -130,7 +129,6 @@ final class ArrayTreeRouteLoader implements RouteLoader
 
     /**
      * @param $middleware
-     * @return MiddlewareInterface
      */
     private function resolveMiddleware($middleware): MiddlewareInterface
     {
@@ -145,10 +143,6 @@ final class ArrayTreeRouteLoader implements RouteLoader
         return Middleware::lazy($this->container, $middleware);
     }
 
-    /**
-     * @param string $className
-     * @return string
-     */
     private function tryFQCN(string $className): string
     {
         if (class_exists($className)) {

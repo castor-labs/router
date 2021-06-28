@@ -49,7 +49,7 @@ class Route extends Path
         $methodMatches = $this->methodMatches($request->getMethod());
 
         try {
-            $request = $this->matchPath($request, $path);
+            $modifyRequest = $this->matchPath($request, $path);
         } catch (NoMatchException $e) {
             return $handler->handle($request);
         }
@@ -60,7 +60,7 @@ class Route extends Path
             return $handler->handle($request);
         }
 
-        return $this->handler->handle($request);
+        return $this->handler->handle($modifyRequest($request));
     }
 
     protected function methodMatches(string $method): bool
