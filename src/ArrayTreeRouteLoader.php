@@ -96,6 +96,7 @@ final class ArrayTreeRouteLoader implements RouteLoader
 
     /**
      * @param $handler
+     * @return RequestHandlerInterface
      */
     private function resolveHandler($handler): RequestHandlerInterface
     {
@@ -129,6 +130,7 @@ final class ArrayTreeRouteLoader implements RouteLoader
 
     /**
      * @param $middleware
+     * @return MiddlewareInterface
      */
     private function resolveMiddleware($middleware): MiddlewareInterface
     {
@@ -144,7 +146,8 @@ final class ArrayTreeRouteLoader implements RouteLoader
     }
 
     /**
-     * @return string#
+     * @param string $className
+     * @return string
      */
     private function tryFQCN(string $className): string
     {
@@ -152,9 +155,9 @@ final class ArrayTreeRouteLoader implements RouteLoader
             return $className;
         }
         foreach ($this->baseNamespaces as $namespace) {
-            $className = $namespace.'\\'.$className;
-            if (class_exists($className)) {
-                return $className;
+            $fqcn = $namespace.'\\'.$className;
+            if (class_exists($fqcn)) {
+                return $fqcn;
             }
         }
         // We return. Is probably a service with a string name.
