@@ -124,7 +124,7 @@ final class ArrayTreeRouteLoader implements RouteLoader
 
         $service = $this->tryFQCN($service);
 
-        return Handler::make($this->container, $service, $method);
+        return Handler::lazy($this->container, $service, $method);
     }
 
     /**

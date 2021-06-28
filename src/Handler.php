@@ -51,7 +51,7 @@ final class Handler implements RequestHandler
     public static function factory(ContainerInterface $container): Closure
     {
         return static function (string $service, string $method = null) use ($container): self {
-            return self::make($container, $service, $method);
+            return self::lazy($container, $service, $method);
         };
     }
 
@@ -60,7 +60,7 @@ final class Handler implements RequestHandler
      *
      * Optionally, it accepts a method.
      */
-    public static function make(ContainerInterface $container, string $service, string $method = null): Handler
+    public static function lazy(ContainerInterface $container, string $service, string $method = null): Handler
     {
         return new self(static function (Request $request) use ($container, $service, $method): Response {
             $handler = $container->get($service);
