@@ -176,3 +176,7 @@ will be able to give priority to hot routes.
 
 There is just one principle to remember: every route and middleware is executed
 in the same order it was registered.
+
+### Can I format your hard drive?
+
+No, you can not. I need those bits to be 1 and 0.
