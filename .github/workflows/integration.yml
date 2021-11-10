@@ -141,7 +141,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v2
+        uses: codfish/semantic-release-action@v1
         with:
           branches: main
           plugins: |
