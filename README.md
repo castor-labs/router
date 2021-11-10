@@ -9,4 +9,4 @@ composer require castor/router
 
 ## Documentation
 
-Documentation is available in Markdown format [here](.castor/docs)
+Documentation is available in Markdown format [here](.castor/docs).

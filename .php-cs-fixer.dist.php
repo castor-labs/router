@@ -13,6 +13,7 @@ file that was distributed with this source code.
 EOF;
 
 return (new PhpCsFixer\Config())
+    ->setCacheFile('var/php-cs-fixer.cache')
     ->setRiskyAllowed(true)
     ->setRules([
         '@PhpCsFixer' => true,
