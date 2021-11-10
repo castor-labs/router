@@ -2,11 +2,13 @@
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.5/phpunit.xsd"
          bootstrap="vendor/autoload.php"
-         cacheResultFile="cache/test-results"
+         cacheResultFile="var/cache/test-results"
          executionOrder="depends,defects"
          beStrictAboutOutputDuringTests="true"
          beStrictAboutTodoAnnotatedTests="true"
          failOnRisky="true"
+         testdox="true"
+         forceCoversAnnotation="true"
          failOnWarning="true"
          verbose="true">
     <testsuites>
@@ -15,10 +17,13 @@
         </testsuite>
     </testsuites>
 
-    <coverage cacheDirectory="cache/code-coverage"
+    <coverage cacheDirectory="var/cache/coverage"
               processUncoveredFiles="true">
         <include>
             <directory suffix=".php">src</directory>
         </include>
+        <report>
+            <clover outputFile="var/coverage-report.xml"/>
+        </report>
     </coverage>
 </phpunit>
