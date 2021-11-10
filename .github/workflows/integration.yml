@@ -129,3 +129,20 @@ jobs:
         run: "composer install ${{ env.COMPOSER_FLAGS }}"
       - name: "Tests"
         run: "vendor/bin/phpunit"
+
+  release:
+    name: "Release"
+    needs:
+      - phpunit
+      - psalm
+      - cs-fixer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v2
+        with:
+          branches: main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
