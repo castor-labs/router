@@ -16,14 +16,15 @@ declare(strict_types=1);
 
 namespace Castor\Http;
 
+use const Castor\Http\Router\ALLOWED_METHODS_ATTR;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Server\RequestHandlerInterface as Handler;
+use Psr\Http\Server\RequestHandlerInterface as PsrHandler;
 
 /**
  * Class DefaultFinalHandler.
  */
-final class DefaultFinalHandler implements Handler
+final class DefaultFinalHandler implements PsrHandler
 {
     /**
      * @throws ProtocolError
@@ -31,7 +32,7 @@ final class DefaultFinalHandler implements Handler
     public function handle(Request $request): Response
     {
         $message = sprintf('Cannot serve %s %s:', $request->getMethod(), $request->getUri()->getPath());
-        $allowedMethods = $request->getAttribute(Route::ALLOWED_METHODS_ATTR, []);
+        $allowedMethods = $request->getAttribute(ALLOWED_METHODS_ATTR, []);
         if ([] === $allowedMethods) {
             throw new ProtocolError(404, $message.' Path not found');
         }

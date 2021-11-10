@@ -1,0 +1,11 @@
+
+READY FOR PR!
+
+Don't forget to add only relevant files to the staging tree.
+
+Please use semantic release commit message format.
+
+Describe your changes in the commit description accurately.
+
+If possible, squash all your changes into a single commit.
+

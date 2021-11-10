@@ -20,23 +20,25 @@
     "autoload": {
         "psr-4": {
             "Castor\\Http\\": "src"
-        }
+        },
+        "files": ["src/functions.php"]
     },
     "autoload-dev": {
         "psr-4": {
             "Castor\\Http\\": "tests"
         }
     },
-    "scripts": {
-        "fix": "php-cs-fixer fix",
-        "lint": "php-cs-fixer fix --dry-run -v",
-        "test": "XDEBUG_MODE=coverage phpunit --testdox --coverage-text",
-        "types": "psalm --stats --no-cache --show-info=true"
+    "config": {
+        "platform": {
+            "php": "7.4"
+        }
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",
         "friendsofphp/php-cs-fixer": "^3.0",
         "phpunit/phpunit": "^9.5",
-        "vimeo/psalm": "^4.6"
+        "vimeo/psalm": "^4.6",
+        "nyholm/psr7": "^1.4",
+        "symfony/var-dumper": "^5.3"
     }
 }

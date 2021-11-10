@@ -16,45 +16,89 @@ declare(strict_types=1);
 
 namespace Castor\Http;
 
+use const Castor\Http\Router\ALLOWED_METHODS_ATTR;
+use const Castor\Http\Router\PARAMS_ATTR;
+use const Castor\Http\Router\PATH_ATTR;
 use MNC\PathToRegExpPHP\NoMatchException;
-use MNC\PathToRegExpPHP\PathRegExp;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Server\RequestHandlerInterface as Handler;
+use MNC\PathToRegExpPHP\PathRegExpFactory;
+use Psr\Http\Message\ResponseInterface as PsrResponse;
+use Psr\Http\Message\ServerRequestInterface as PsrRequest;
+use Psr\Http\Server\MiddlewareInterface as PsrMiddleware;
+use Psr\Http\Server\RequestHandlerInterface as PsrHandler;
 
 /**
  * Class Route.
  */
-class Route extends Path
+class Route implements PsrMiddleware
 {
-    public const ALLOWED_METHODS_ATTR = 'castor.router.allowed_methods';
-
+    private Router $router;
     /**
      * @var string[]
      */
     private array $methods;
+    private string $pattern;
+    private ?PsrHandler $handler;
 
     /**
      * Route constructor.
      */
-    public function __construct(array $methods, PathRegExp $path, Handler $handler)
+    public function __construct(Router $router, array $methods = [], string $pattern = '/', PsrHandler $handler = null)
     {
-        parent::__construct($path, $handler);
+        $this->router = $router;
         $this->methods = $methods;
+        $this->pattern = $pattern;
+        $this->handler = $handler;
     }
 
-    public function process(Request $request, Handler $handler): Response
+    public function method(string ...$methods): Route
     {
+        $this->methods = $methods;
+
+        return $this;
+    }
+
+    public function path(string $pattern): Route
+    {
+        $this->pattern = $pattern;
+
+        return $this;
+    }
+
+    public function handler(PsrHandler $handler): Route
+    {
+        $this->handler = $handler;
+
+        return $this;
+    }
+
+    public function router(): Router
+    {
+        $this->handler = $this->router->new();
+
+        return $this->handler;
+    }
+
+    /**
+     * @throws ProtocolError
+     */
+    public function process(PsrRequest $request, PsrHandler $handler): PsrResponse
+    {
+        if (null === $this->handler) {
+            throw new ProtocolError(501, 'Handler has not been defined for route');
+        }
+
+        $hasMethods = [] !== $this->methods;
+        $methodMatches = in_array($request->getMethod(), $this->methods, true);
+
         $path = $this->extractPathFromRequest($request);
-        $methodMatches = $this->methodMatches($request->getMethod());
 
         try {
-            $modifyRequest = $this->matchPath($request, $path);
+            $modifyRequest = $this->matchPath($path, $hasMethods);
         } catch (NoMatchException $e) {
             return $handler->handle($request);
         }
 
-        if (!$methodMatches) {
+        if ($hasMethods && !$methodMatches) {
             $request = $this->storeAllowedMethod($request, $this->methods);
 
             return $handler->handle($request);
@@ -63,18 +107,50 @@ class Route extends Path
         return $this->handler->handle($modifyRequest($request));
     }
 
-    protected function methodMatches(string $method): bool
+    protected function storeAllowedMethod(PsrRequest $request, array $methods): PsrRequest
     {
-        return \in_array($method, $this->methods, true);
-    }
-
-    protected function storeAllowedMethod(Request $request, array $methods): Request
-    {
-        $allowedMethods = $request->getAttribute(self::ALLOWED_METHODS_ATTR, []);
+        $allowedMethods = $request->getAttribute(ALLOWED_METHODS_ATTR, []);
 
         return $request->withAttribute(
-            self::ALLOWED_METHODS_ATTR,
+            ALLOWED_METHODS_ATTR,
             array_unique(array_merge($allowedMethods, $methods))
         );
+    }
+
+    protected function extractPathFromRequest(PsrRequest $request): string
+    {
+        $path = $request->getAttribute(PATH_ATTR) ?? $request->getUri()->getPath();
+        if ('' === $path) {
+            $path = '/';
+        }
+
+        return $path;
+    }
+
+    /**
+     * @throws NoMatchException
+     *
+     * @return callable(PsrRequest): PsrRequest
+     */
+    protected function matchPath(string $path, bool $full): callable
+    {
+        $result = PathRegExpFactory::create($this->pattern, $full ? 2 : 0)->match($path);
+
+        return static function (PsrRequest $request) use ($result, $path): PsrRequest {
+            // Modify the path to match and store it in the request.
+            $path = str_replace($result->getMatchedString(), '', $path);
+            if ('' === $path) {
+                $path = '/';
+            }
+            $request = $request->withAttribute(PATH_ATTR, $path);
+
+            // Store the attributes in the request
+            $params = $request->getAttribute(PARAMS_ATTR) ?? [];
+            foreach ($result->getValues() as $attr => $value) {
+                $params[$attr] = $value;
+            }
+
+            return $request->withAttribute(PARAMS_ATTR, $params);
+        };
     }
 }

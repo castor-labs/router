@@ -16,13 +16,8 @@ declare(strict_types=1);
 
 namespace Castor\Http;
 
-/**
- * Interface RouteLoader.
- */
-interface RouteLoader
+use Exception;
+
+class EmptyStackError extends Exception
 {
-    /**
-     * Loads routes into a router.
-     */
-    public function load(Router $router): void;
 }

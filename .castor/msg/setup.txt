@@ -1,0 +1,19 @@
+
+PROJECT SETUP COMPLETE!
+
+We recommend adding this alias to your shell:
+
+    alias cdc="docker compose --project-directory .castor/docker --env-file .castor/docker/.env"
+
+After you have done it, you can quickly use "cdc" to exec into a container:
+
+    cdc exec main php -v
+
+To open an alpine shell into the main service, run:
+
+    cdc exec main ash
+
+Don't forget to run "make pr" before pushing code for a Pull Request.
+
+Happy coding!
+

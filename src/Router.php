@@ -16,32 +16,31 @@ declare(strict_types=1);
 
 namespace Castor\Http;
 
-use MNC\PathToRegExpPHP\PathRegExpFactory;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Server\MiddlewareInterface as Middleware;
-use Psr\Http\Server\RequestHandlerInterface as Handler;
+use Psr\Http\Message\ResponseInterface as PsrResponse;
+use Psr\Http\Message\ServerRequestInterface as PsrRequest;
+use Psr\Http\Server\MiddlewareInterface as PsrMiddleware;
+use Psr\Http\Server\RequestHandlerInterface as PSrHandler;
 
 /**
  * Class Router.
  *
  * This Router is implemented as a middleware execution pipeline.
  */
-class Router implements Handler
+class Router implements PSrHandler
 {
     /**
-     * @var Middleware[]
-     * @psalm-var array<int,Middleware>
+     * @var PsrMiddleware[]
+     * @psalm-var array<int,PsrMiddleware>
      */
     private array $middleware;
-    private Handler $fallbackHandler;
+    private PSrHandler $fallbackHandler;
 
     /**
      * Router constructor.
      *
-     * @param Middleware ...$middleware
+     * @param PsrMiddleware ...$middleware
      */
-    public function __construct(Handler $fallbackHandler = null, Middleware ...$middleware)
+    public function __construct(PSrHandler $fallbackHandler = null, PsrMiddleware ...$middleware)
     {
         $this->fallbackHandler = $fallbackHandler ?? new DefaultFinalHandler();
         $this->middleware = $middleware;
@@ -55,156 +54,47 @@ class Router implements Handler
     /**
      * @return static
      */
-    public function use(Middleware $middleware): Router
+    public function use(PsrMiddleware $middleware): Router
     {
         $this->middleware[] = $middleware;
 
         return $this;
     }
 
-    public function handle(Request $request): ResponseInterface
+    /**
+     * @throws ProtocolError
+     */
+    public function handle(PsrRequest $request): PsrResponse
     {
-        $handler = MiddlewareRunner::stack($this->fallbackHandler, ...$this->middleware);
+        try {
+            $handler = Frame::stack($this->fallbackHandler, ...$this->middleware);
+        } catch (EmptyStackError $e) {
+            throw new ProtocolError(500, 'Router does not have any handlers that can handle the request', $e);
+        }
 
         return $handler->handle($request);
     }
 
-    /**
-     * Registers $handler for $path that only handles GET requests.
-     *
-     * By default, also the HEAD method is added.
-     *
-     * @return static
-     */
-    public function get(string $path, Handler $handler): Router
+    public function path(string $path): Route
     {
-        $this->route(['GET', 'HEAD'], $path, $handler);
+        $route = new Route($this, [], $path);
+        $this->use($route);
 
-        return $this;
+        return $route;
     }
 
-    /**
-     * Registers $handler for $path that only handles POST requests.
-     *
-     * @return static
-     */
-    public function post(string $path, Handler $handler): Router
+    public function method(string ...$methods): Route
     {
-        $this->route(['POST'], $path, $handler);
+        $route = new Route($this, $methods);
+        $this->use($route);
 
-        return $this;
-    }
-
-    /**
-     * Registers $handler for $path that handles both GET and POST requests.
-     *
-     * This is useful when dealing with HTML web forms.
-     *
-     * @return static
-     */
-    public function form(string $path, Handler $handler): Router
-    {
-        $this->route(['GET', 'POST'], $path, $handler);
-
-        return $this;
-    }
-
-    /**
-     * Registers $handler for $path that only handles PUT requests.
-     *
-     * @return static
-     */
-    public function put(string $path, Handler $handler): Router
-    {
-        $this->route(['PUT'], $path, $handler);
-
-        return $this;
-    }
-
-    /**
-     * Registers $handler for $path that only handles PATCH requests.
-     *
-     * @return static
-     */
-    public function patch(string $path, Handler $handler): Router
-    {
-        $this->route(['PATCH'], $path, $handler);
-
-        return $this;
-    }
-
-    /**
-     * Registers $handler for $path that only handles DELETE requests.
-     *
-     * @return static
-     */
-    public function delete(string $path, Handler $handler): Router
-    {
-        $this->route(['DELETE'], $path, $handler);
-
-        return $this;
-    }
-
-    /**
-     * Registers $handler for $path that only handles OPTIONS requests.
-     *
-     * @return static
-     */
-    public function options(string $path, Handler $handler): Router
-    {
-        $this->route(['OPTIONS'], $path, $handler);
-
-        return $this;
-    }
-
-    /**
-     * Registers a $handler for $path with custom methods.
-     *
-     * @param string[] $methods
-     *
-     * @return static
-     */
-    public function route(array $methods, string $path, Handler $handler): Router
-    {
-        $this->use(new Route($methods, PathRegExpFactory::create($path), $handler));
-
-        return $this;
-    }
-
-    /**
-     * Mounts a handler into a path.
-     *
-     * When the request path matches the provided path, the request is passed
-     * to that handler.
-     *
-     * Use this method to mount routers on top of other routers.
-     *
-     * @return $this
-     */
-    public function mount(string $path, Handler $handler): Router
-    {
-        return $this->use(new Path(PathRegExpFactory::create($path, 0), $handler));
-    }
-
-    /**
-     * Creates a group of routes under the specified path.
-     *
-     * @psalm-param callable(Router): void $callback
-     */
-    public function group(string $path, callable $callback): Router
-    {
-        $router = $this->child();
-        $this->mount($path, $router);
-
-        $callback($router);
-
-        return $this;
+        return $route;
     }
 
     /**
      * Creates a new router with the same underlying fallback handler.
      */
-    public function child(): Router
+    public function new(): Router
     {
         return new Router($this->fallbackHandler);
     }

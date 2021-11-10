@@ -22,10 +22,28 @@ use Throwable;
 /**
  * Class ProtocolError represents an error in the HTTP Protocol specification.
  */
-class ProtocolError extends Exception
+final class ProtocolError extends Exception
 {
     public function __construct(int $status = 500, string $message = 'Internal Server Error', Throwable $previous = null)
     {
         parent::__construct($message, $status, $previous);
+    }
+
+    public function toArray(): array
+    {
+        $errors = [];
+        $error = $this;
+        while (null !== $error) {
+            $errors[] = [
+                'class' => get_class($error),
+                'msg' => $error->getMessage(),
+                'code' => $error->getCode(),
+                'line' => $error->getLine(),
+                'file' => $error->getFile(),
+            ];
+            $error = $error->getPrevious();
+        }
+
+        return $errors;
     }
 }
