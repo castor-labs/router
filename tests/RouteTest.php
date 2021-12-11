@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace Castor\Http;
 
-use const Castor\Http\Router\PARAMS_ATTR;
 use const Castor\Http\Router\PATH_ATTR;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -30,27 +29,14 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 class RouteTest extends TestCase
 {
-    public function testItThrowsNotImplemented(): void
-    {
-        $router = $this->createStub(Router::class);
-        $request = $this->createStub(ServerRequestInterface::class);
-        $handler = $this->createStub(RequestHandlerInterface::class);
-
-        $route = new Route($router);
-        $this->expectException(ProtocolError::class);
-        $route->process($request, $handler);
-    }
-
     public function testItProcessMethodsOnly(): void
     {
-        $router = $this->createStub(Router::class);
         $response = $this->createStub(ResponseInterface::class);
         $request = $this->createMock(ServerRequestInterface::class);
         $uri = $this->createMock(UriInterface::class);
         $routeHandler = $this->createMock(RequestHandlerInterface::class);
         $nextHandler = $this->createMock(RequestHandlerInterface::class);
-        $route = new Route($router, ['PUT']);
-        $route->handler($routeHandler);
+        $route = new Route($routeHandler, ['PUT'], '/');
 
         $request->expects($this->once())
             ->method('getMethod')
@@ -64,14 +50,14 @@ class RouteTest extends TestCase
             ->method('getPath')
             ->willReturn('/')
         ;
-        $request->expects($this->exactly(2))
+        $request->expects($this->once())
             ->method('getAttribute')
-            ->withConsecutive([PATH_ATTR], [PARAMS_ATTR])
+            ->with(PATH_ATTR)
             ->willReturn(null)
         ;
-        $request->expects($this->exactly(2))
+        $request->expects($this->once())
             ->method('withAttribute')
-            ->withConsecutive([PATH_ATTR, '/'], [PARAMS_ATTR, []])
+            ->with(PATH_ATTR, '/')
             ->willReturn($request)
         ;
         $routeHandler->expects($this->once())
@@ -85,14 +71,12 @@ class RouteTest extends TestCase
 
     public function testItProcessPathOnly(): void
     {
-        $router = $this->createStub(Router::class);
         $response = $this->createStub(ResponseInterface::class);
         $request = $this->createMock(ServerRequestInterface::class);
         $uri = $this->createMock(UriInterface::class);
         $routeHandler = $this->createMock(RequestHandlerInterface::class);
         $nextHandler = $this->createMock(RequestHandlerInterface::class);
-        $route = new Route($router);
-        $route->path('/users')->handler($routeHandler);
+        $route = new Route($routeHandler, [], '/users');
 
         $request->expects($this->once())
             ->method('getMethod')
@@ -106,14 +90,14 @@ class RouteTest extends TestCase
             ->method('getPath')
             ->willReturn('/users/123')
         ;
-        $request->expects($this->exactly(2))
+        $request->expects($this->once())
             ->method('getAttribute')
-            ->withConsecutive([PATH_ATTR], [PARAMS_ATTR])
+            ->with(PATH_ATTR)
             ->willReturn(null)
         ;
-        $request->expects($this->exactly(2))
+        $request->expects($this->once())
             ->method('withAttribute')
-            ->withConsecutive([PATH_ATTR, '/123'], [PARAMS_ATTR, []])
+            ->with(PATH_ATTR, '/123')
             ->willReturn($request)
         ;
         $nextHandler->expects($this->never())
@@ -130,14 +114,12 @@ class RouteTest extends TestCase
 
     public function testItProcessMethodAndPath(): void
     {
-        $router = $this->createStub(Router::class);
         $response = $this->createStub(ResponseInterface::class);
         $request = $this->createMock(ServerRequestInterface::class);
         $uri = $this->createMock(UriInterface::class);
         $routeHandler = $this->createMock(RequestHandlerInterface::class);
         $nextHandler = $this->createMock(RequestHandlerInterface::class);
-        $route = new Route($router);
-        $route->method('GET')->path('/users')->handler($routeHandler);
+        $route = new Route($routeHandler, ['GET'], '/users');
 
         $request->expects($this->once())
             ->method('getMethod')
@@ -151,14 +133,14 @@ class RouteTest extends TestCase
             ->method('getPath')
             ->willReturn('/users')
         ;
-        $request->expects($this->exactly(2))
+        $request->expects($this->once())
             ->method('getAttribute')
-            ->withConsecutive([PATH_ATTR], [PARAMS_ATTR])
+            ->with(PATH_ATTR)
             ->willReturn(null)
         ;
-        $request->expects($this->exactly(2))
+        $request->expects($this->once())
             ->method('withAttribute')
-            ->withConsecutive([PATH_ATTR, '/'], [PARAMS_ATTR, []])
+            ->with(PATH_ATTR, '/')
             ->willReturn($request)
         ;
         $nextHandler->expects($this->never())

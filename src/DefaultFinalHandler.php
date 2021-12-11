@@ -27,16 +27,17 @@ use Psr\Http\Server\RequestHandlerInterface as PsrHandler;
 final class DefaultFinalHandler implements PsrHandler
 {
     /**
-     * @throws ProtocolError
+     * @throws MethodNotAllowed
+     * @throws RouteNotFound
      */
     public function handle(Request $request): Response
     {
         $message = sprintf('Cannot serve %s %s:', $request->getMethod(), $request->getUri()->getPath());
         $allowedMethods = $request->getAttribute(ALLOWED_METHODS_ATTR, []);
         if ([] === $allowedMethods) {
-            throw new ProtocolError(404, $message.' Path not found');
+            throw new RouteNotFound('Route not found');
         }
 
-        throw new ProtocolError(405, $message.' Allowed methods are '.implode(', ', $allowedMethods));
+        throw new MethodNotAllowed('Method not allowed', $allowedMethods);
     }
 }

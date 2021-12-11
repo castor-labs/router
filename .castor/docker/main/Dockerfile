@@ -24,6 +24,7 @@ RUN apk add --no-cache wget php8 \
     php8-mbstring \
     php8-openssl \
     php8-pcntl \
+    php8-posix \
     php8-pecl-xdebug
 
 # Link PHP

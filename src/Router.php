@@ -62,30 +62,72 @@ class Router implements PSrHandler
     }
 
     /**
-     * @throws ProtocolError
+     * @throws EmptyStackError
      */
     public function handle(PsrRequest $request): PsrResponse
     {
-        try {
-            $handler = Frame::stack($this->fallbackHandler, ...$this->middleware);
-        } catch (EmptyStackError $e) {
-            throw new ProtocolError(500, 'Router does not have any handlers that can handle the request', $e);
-        }
+        $handler = Frame::stack($this->fallbackHandler, ...$this->middleware);
 
         return $handler->handle($request);
     }
 
-    public function path(string $path): Route
+    /**
+     * Registers a $handler to run when matching $path and GET method.
+     */
+    public function get(string $path, PSrHandler $handler): Route
     {
-        $route = new Route($this, [], $path);
+        return $this->route([METHOD_GET, METHOD_HEAD], $path, $handler);
+    }
+
+    /**
+     * Registers a $handler to run when matching $path and POST method.
+     */
+    public function post(string $path, PSrHandler $handler): Route
+    {
+        return $this->route([METHOD_POST], $path, $handler);
+    }
+
+    /**
+     * Registers a $handler to run when matching $path and PUT method.
+     */
+    public function put(string $path, PSrHandler $handler): Route
+    {
+        return $this->route([METHOD_PUT], $path, $handler);
+    }
+
+    /**
+     * Registers a $handler to run when matching $path and PATCH method.
+     */
+    public function patch(string $path, PSrHandler $handler): Route
+    {
+        return $this->route([METHOD_PATCH], $path, $handler);
+    }
+
+    /**
+     * Registers a $handler to run when matching $path and DELETE method.
+     */
+    public function delete(string $path, PSrHandler $handler): Route
+    {
+        return $this->route([METHOD_DELETE], $path, $handler);
+    }
+
+    /**
+     * Registers a $handler to run when matching $path and $methods.
+     */
+    public function route(array $methods, string $path, PSrHandler $handler): Route
+    {
+        $route = new Route($handler, $methods, $path);
         $this->use($route);
 
         return $route;
     }
 
-    public function method(string ...$methods): Route
+    /**
+     * Registers a $handler to run when matching $path.
+     */
+    public function path(string $path, PSrHandler $handler): Route
     {
-        $route = new Route($this, $methods);
+        $route = new Route($handler, [], $path);
         $this->use($route);
 
         return $route;

@@ -1,5 +1,5 @@
 COMPOSE_FLAGS = --project-directory .castor/docker --env-file=.castor/docker/.env
-COMPOSE_CMD = docker compose $(COMPOSE_FLAGS)
+COMPOSE_CMD = docker-compose $(COMPOSE_FLAGS)
 
 build:
 	$(COMPOSE_CMD) build

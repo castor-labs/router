@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace Castor\Http;
 
 use const Castor\Http\Router\ALLOWED_METHODS_ATTR;
-use const Castor\Http\Router\PARAMS_ATTR;
 use const Castor\Http\Router\PATH_ATTR;
 use MNC\PathToRegExpPHP\NoMatchException;
 use MNC\PathToRegExpPHP\PathRegExpFactory;
@@ -31,62 +30,25 @@ use Psr\Http\Server\RequestHandlerInterface as PsrHandler;
  */
 class Route implements PsrMiddleware
 {
-    private Router $router;
+    private PsrHandler $handler;
     /**
      * @var string[]
      */
     private array $methods;
     private string $pattern;
-    private ?PsrHandler $handler;
 
     /**
      * Route constructor.
      */
-    public function __construct(Router $router, array $methods = [], string $pattern = '/', PsrHandler $handler = null)
-    {
-        $this->router = $router;
-        $this->methods = $methods;
-        $this->pattern = $pattern;
-        $this->handler = $handler;
-    }
-
-    public function method(string ...$methods): Route
-    {
-        $this->methods = $methods;
-
-        return $this;
-    }
-
-    public function path(string $pattern): Route
-    {
-        $this->pattern = $pattern;
-
-        return $this;
-    }
-
-    public function handler(PsrHandler $handler): Route
+    public function __construct(PsrHandler $handler, array $methods = [], string $pattern = '/')
     {
         $this->handler = $handler;
-
-        return $this;
+        $this->methods = $methods;
+        $this->pattern = $pattern;
     }
 
-    public function router(): Router
-    {
-        $this->handler = $this->router->new();
-
-        return $this->handler;
-    }
-
-    /**
-     * @throws ProtocolError
-     */
     public function process(PsrRequest $request, PsrHandler $handler): PsrResponse
     {
-        if (null === $this->handler) {
-            throw new ProtocolError(501, 'Handler has not been defined for route');
-        }
-
         $hasMethods = [] !== $this->methods;
         $methodMatches = in_array($request->getMethod(), $this->methods, true);
 
@@ -145,12 +107,11 @@ class Route implements PsrMiddleware
             $request = $request->withAttribute(PATH_ATTR, $path);
 
             // Store the attributes in the request
-            $params = $request->getAttribute(PARAMS_ATTR) ?? [];
             foreach ($result->getValues() as $attr => $value) {
-                $params[$attr] = $value;
+                $request = $request->withAttribute($attr, $value);
             }
 
-            return $request->withAttribute(PARAMS_ATTR, $params);
+            return $request;
         };
     }
 }
