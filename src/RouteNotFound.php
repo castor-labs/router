@@ -14,17 +14,8 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Castor\Http\Router;
-
-const PATH_ATTR = 'castor.router.path';
-const ALLOWED_METHODS_ATTR = 'castor.router.allowed_methods';
-
 namespace Castor\Http;
 
-const METHOD_GET = 'GET';
-const METHOD_POST = 'POST';
-const METHOD_PUT = 'PUT';
-const METHOD_PATCH = 'PATCH';
-const METHOD_DELETE = 'DELETE';
-const METHOD_HEAD = 'HEAD';
-const METHOD_OPTIONS = 'OPTIONS';
+class RouteNotFound extends RoutingError
+{
+}

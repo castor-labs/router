@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace Castor\Http;
 
-use function Castor\Http\Router\params;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -30,21 +29,21 @@ class RouterTest extends IntegrationTestCase
     {
         $request = $this->createStub(ServerRequestInterface::class);
         $router = Router::create();
-        $this->expectException(ProtocolError::class);
+        $this->expectException(EmptyStackError::class);
         $router->handle($request);
     }
 
     public function testMatchesGetRequest(): void
     {
         $handler = function (ServerRequestInterface $req): ResponseInterface {
-            $id = params($req)['id'] ?? null;
+            $id = $req->getAttribute('id');
             self::assertSame('1234', $id);
 
             return $this->createResponse('OK');
         };
 
         $router = Router::create();
-        $router->method('GET')->path('/users/:id')->handler($this->functionHandler($handler));
+        $router->get('/users/:id', $this->functionHandler($handler));
 
         $response = $router->handle($this->createRequest('GET', 'https://example.com/users/1234'));
         self::assertSame('OK', (string) $response->getBody());

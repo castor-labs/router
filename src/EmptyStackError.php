@@ -16,8 +16,6 @@ declare(strict_types=1);
 
 namespace Castor\Http;
 
-use Exception;
-
-class EmptyStackError extends Exception
+class EmptyStackError extends RoutingError
 {
 }

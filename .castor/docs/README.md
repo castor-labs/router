@@ -11,7 +11,7 @@ Creating a router is extremely simple:
 $router = Castor\Http\Router::create();
 ```
 
-Castor router implements `Psr\Http\Server\RequestHandlerInterface` so you can use it to handle any PRS-7 Server Request.
+Castor router implements `Psr\Http\Server\RequestHandlerInterface` so you can use it to handle any PSR-7 Server Request.
 
 ```php
 <?php
@@ -21,23 +21,24 @@ $router = Castor\Http\Router::create();
 $response = $router->handle($aRequest);
 ```
 
-> NOTE: An empty router will throw a `Castor\Http\ProtocolError` when its `handle` method is called.
+> NOTE: An empty router will throw a `Castor\Http\EmptyStackError` when its `handle` method is called.
 
-You can add routes by calling `method` and `path` methods in the router instance and passing a handler.
+You can add routes by calling methods named after http methods and passing a path and a handler.
 
 ```php
 <?php
 
 $router = $router = Castor\Http\Router::create();
-$router->method('GET')->path('/users')->handler($listUsersHandler);
-$router->method('GET')->path('/users/:id')->handler($findUserHandler);
-$router->method('POST')->path('/users')->handler($createUserHandler);
-$router->method('DELETE')->path('/users/:id')->handler($deleteUserHandler);
+$router->get('/users', $listUsersHandler);
+$router->get('/users/:id', $findUserHandler);
+$router->post('/users', $createUserHandler);
+$router->delete('/users/:id', $deleteUserHandler);
 ```
 
 As you can see, you can pass routing parameters using `:<param_name>` notation when defining your route.
 
-You can retrieve routing parameters using the `Castor\Http\Router\params` function and passing a Psr Server Request.
+You can retrieve routing parameters by calling the `getAttribute` method on the `$request` and passing the param
+name.
 
 ```php
 <?php
@@ -51,7 +52,7 @@ class MyHandler implements PsrHandler
 {
     public function handle(PsrRequest $request): PsrResponse
     {
-        $id = params($request)['id'] ?? null;
+        $id = $request->getAttribute('id');
         // TODO: Do something with the id and return a response.
     }
 }
@@ -60,13 +61,14 @@ class MyHandler implements PsrHandler
 ## Path Handlers
 
 As we have shown above, you can create a Route that responds to a method-path match with a specific handler. But you
-can also create a Route that executes a handler upon matching a Path. Just call `path` without calling `method`.
+can also create a Route that executes a handler upon matching a Path. Just call the `path` function in the router
+class.
 
 ```php
 <?php
 
 $router = Castor\Http\Router::create();
-$router->path('/users')->handler($aHandler);
+$router->path('/users', $aHandler);
 ```
 
 The `$aHandler` handler will be executed when the path matches `/users`.
@@ -77,11 +79,11 @@ By using path matching, you can mount routers on routers and build a routing tre
 
 ```php
 $routerOne = Castor\Http\Router::create();
-$routerOne->method('GET')->handler($aHandler);
-$routerOne->method('GET')->path('/:id')->handler($aHandler);
+$routerOne->get('/', $aHandler);
+$routerOne->get('/:id', $aHandler);
 
 $routerTwo = Castor\Http\Router::create();
-$routerTwo->path('/users')->handler($routerOne);
+$routerTwo->path('/users', $routerOne);
 ```
 
 Here we mount `$routerOne` into the `/users` path in `$routerTwo`, which causes all the `$routerOne` routes to match
@@ -90,5 +92,5 @@ under `/users` path. For instance, the second route with id will match a `GET /u
 ## Error Handling
 
 Once you have built all of your routes, we recommend wrapping the router into a `Castor\Http\ErrorHandler`. You will
-need a Psr Response Factory, and passing a logger is highly recommended. This will print debugging information as well
-as normalizing http responses.
+need a Psr Response Factory. This is so the router can respond on errors and not simply throw
+exceptions.
