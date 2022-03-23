@@ -82,7 +82,7 @@ class Route implements PsrMiddleware
     protected function extractPathFromRequest(PsrRequest $request): string
     {
         $path = $request->getAttribute(PATH_ATTR) ?? $request->getUri()->getPath();
-        if ('' === $path) {
+        if ('' !== $path) {
             $path = '/';
         }
 
