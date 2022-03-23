@@ -31,7 +31,7 @@ RUN apk add --no-cache wget php8 \
 RUN ln -s /usr/bin/php8 /usr/bin/php
 
 # Configure XDebug
-COPY ./main/ini/60_xdebug.ini /etc/php8/conf.d/60_xdebug.ini
+COPY .castor/docker/main/ini/60_xdebug.ini /etc/php8/conf.d/60_xdebug.ini
 
 # Install Composer
 RUN wget -O /usr/bin/composer https://github.com/composer/composer/releases/download/$COMPOSER_VERSION/composer.phar && \

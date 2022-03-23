@@ -58,7 +58,7 @@ final class ErrorHandler implements PsrHandler
         $response = $this->response->createResponse($status)
             ->withHeader('Content-Type', 'text/plain')
         ;
-        $msg = sprintf('Could not %s %s', $request->getMethod(), $request->getUri());
+        $msg = sprintf('Cannot %s %s', $request->getMethod(), $request->getUri());
         $response->getBody()->write($msg);
 
         return $response;

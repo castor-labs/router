@@ -66,9 +66,7 @@ class Router implements PSrHandler
      */
     public function handle(PsrRequest $request): PsrResponse
     {
-        $handler = Frame::stack($this->fallbackHandler, ...$this->middleware);
-
-        return $handler->handle($request);
+        return Frame::stack($this->fallbackHandler, ...$this->middleware)->handle($request);
     }
 
     /**

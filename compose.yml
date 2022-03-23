@@ -1,0 +1,14 @@
+version: '3.7'
+
+services:
+
+  main:
+    image: castor-router/php-dev
+    build:
+      context: .
+      dockerfile: .castor/docker/main/Dockerfile
+    container_name: castor.router
+    volumes:
+      - .:/castor/lib
+    working_dir: /castor/lib
+    user: castor
